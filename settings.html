@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<title>Iron — nastavení</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body class="app-body">
+<div class="titlebar">
+  <div class="tb-left">
+    <span class="tb-dot"></span>
+    <span class="tb-title">Iron Anticheat</span>
+  </div>
+  <div class="tb-right">
+    <button class="tb-btn" data-action="min">–</button>
+    <button class="tb-btn" data-action="max">□</button>
+    <button class="tb-btn close" data-action="close">×</button>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="side-brand"><span class="dot"></span><span>IRON</span></div>
+    <nav class="side-nav">
+      <a href="index.html"><span class="ico">▦</span> přehled</a>
+      <a href="players.html"><span class="ico">◉</span> hráči</a>
+      <a href="events.html"><span class="ico">≡</span> eventy</a>
+      <a href="settings.html" class="active"><span class="ico">⚙</span> nastavení</a>
+    </nav>
+    <div class="side-foot">
+      <div class="side-user" id="side-user">—</div>
+      <a href="#" id="logout" class="side-logout">odhlásit</a>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="content-head"><h1>Nastavení</h1></div>
+
+    <section class="panel settings">
+      <h2>API</h2>
+      <div class="row"><input id="api" placeholder="api url" /></div>
+      <div class="row"><button id="save-api">uložit URL</button></div>
+
+      <h2 style="margin-top:20px">Změna hesla</h2>
+      <div class="row"><input id="old" type="password" placeholder="staré heslo" /></div>
+      <div class="row"><input id="new" type="password" placeholder="nové heslo" /></div>
+      <div class="row"><button id="save-pass">změnit heslo</button></div>
+
+      <p id="msg" class="dim" style="margin-top:12px"></p>
+    </section>
+  </main>
+</div>
+
+<script src="auth.js"></script>
+<script src="app.js"></script>
+<script src="titlebar.js"></script>
+<script>
+(async () => {
+  if (!await IronAuth.requireLogin()) return;
+  initFrame('settings.html', 'Nastavení');
+
+  document.getElementById('api').value = IronAuth.api();
+
+  document.getElementById('save-api').onclick = () => {
+    const v = document.getElementById('api').value.trim().replace(/\/$/, '');
+    localStorage.setItem('iron_api', v);
+    document.getElementById('msg').textContent = 'URL uložena, reload…';
+    setTimeout(() => location.reload(), 800);
+  };
+
+  document.getElementById('save-pass').onclick = async () => {
+    const oldPassword = document.getElementById('old').value;
+    const newPassword = document.getElementById('new').value;
+    if (!oldPassword || !newPassword) return;
+    const r = await fetch(IronAuth.api() + '/auth/change', {
+      method: 'POST',
+      headers: IronAuth.headers(),
+      body: JSON.stringify({ oldPassword, newPassword }),
+    });
+    document.getElementById('msg').textContent = r.ok ? 'heslo změněno' : 'chyba';
+  };
+})();
+</script>
+</body>
+</html>
