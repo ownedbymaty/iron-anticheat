@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Iron — přihlášení</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body class="login-body">
+<div class="titlebar static">
+  <div class="tb-left">
+    <span class="tb-dot"></span>
+    <span class="tb-title">Iron Anticheat</span>
+  </div>
+  <div class="tb-right">
+    <button class="tb-btn" disabled>–</button>
+    <button class="tb-btn" disabled>□</button>
+    <button class="tb-btn close" disabled>×</button>
+  </div>
+</div>
+
+<main class="login-stage">
+  <form class="card" id="form">
+    <div class="brand">
+      <span class="dot"></span>
+      <span>IRON</span>
+      <span class="sub">anticheat</span>
+    </div>
+    <input id="u" placeholder="uživatel" autocomplete="username" required />
+    <input id="p" type="password" placeholder="heslo" autocomplete="current-password" required />
+    <input id="api" placeholder="api url" required />
+    <button type="submit">přihlásit</button>
+    <p id="err" class="err"></p>
+    <p class="hint">vlož URL svého Workeru (např. https://iron-anticheat.tvujmeno.workers.dev)</p>
+  </form>
+</main>
+
+<script src="auth.js"></script>
+<script>
+  const apiInput = document.getElementById('api');
+  apiInput.value = localStorage.getItem('iron_api') || '';
+
+  document.getElementById('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const api = apiInput.value.trim().replace(/\/$/, '');
+    if (!api) { document.getElementById('err').textContent = 'chybí api url'; return; }
+
+    const changed = api !== IronAuth.api();
+    localStorage.setItem('iron_api', api);
+
+    if (changed) { location.reload(); return; }
+
+    document.getElementById('err').textContent = 'přihlašuji…';
+    const r = await IronAuth.login(
+      document.getElementById('u').value,
+      document.getElementById('p').value
+    );
+    if (r.ok) location.href = 'index.html';
+    else document.getElementById('err').textContent = 'špatné jméno nebo heslo';
+  });
+</script>
+</body>
+</html>
