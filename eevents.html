@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<title>Iron — eventy</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body class="app-body">
+<div class="titlebar">
+  <div class="tb-left">
+    <span class="tb-dot"></span>
+    <span class="tb-title">Iron Anticheat</span>
+  </div>
+  <div class="tb-right">
+    <button class="tb-btn" data-action="min">–</button>
+    <button class="tb-btn" data-action="max">□</button>
+    <button class="tb-btn close" data-action="close">×</button>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="side-brand"><span class="dot"></span><span>IRON</span></div>
+    <nav class="side-nav">
+      <a href="index.html"><span class="ico">▦</span> přehled</a>
+      <a href="players.html"><span class="ico">◉</span> hráči</a>
+      <a href="events.html" class="active"><span class="ico">≡</span> eventy</a>
+      <a href="settings.html"><span class="ico">⚙</span> nastavení</a>
+    </nav>
+    <div class="side-foot">
+      <div class="side-user" id="side-user">—</div>
+      <a href="#" id="logout" class="side-logout">odhlásit</a>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="content-head">
+      <h1>Eventy</h1>
+      <select id="filter" class="pill">
+        <option value="">vše</option>
+        <option value="POSITION">POSITION</option>
+        <option value="DAMAGE">DAMAGE</option>
+        <option value="GODMODE">GODMODE</option>
+        <option value="FLOOD">FLOOD</option>
+        <option value="SESSION">SESSION</option>
+        <option value="ACTION">ACTION</option>
+        <option value="BOOT">BOOT</option>
+      </select>
+    </div>
+    <section class="panel">
+      <ul id="feed"></ul>
+    </section>
+  </main>
+</div>
+
+<script src="auth.js"></script>
+<script src="app.js"></script>
+<script src="titlebar.js"></script>
+<script>
+(async () => {
+  if (!await IronAuth.requireLogin()) return;
+  initFrame('events.html', 'Eventy');
+
+  let cursor = Date.now() - 3600000;
+  const feed = document.getElementById('feed');
+  const filter = document.getElementById('filter');
+
+  function push(e) {
+    if (filter.value && e.category !== filter.value) return;
+    const li = document.createElement('li');
+    li.className = e.level || 'warn';
+    li.innerHTML = `<span class="ts">${fmtTime(e.received || e.time)}</span>`
+      + `${esc(e.category)} | ${esc(e.player || '-')} | ${esc(e.reason)}`;
+    feed.prepend(li);
+    while (feed.children.length > 500) feed.lastChild.remove();
+  }
+
+  async function tick() {
+    const { events, cursor: next } = await IronAPI.feed(cursor);
+    events.forEach(push);
+    if (next) cursor = next;
+  }
+
+  filter.onchange = () => { feed.innerHTML = ''; cursor = Date.now() - 3600000; tick(); };
+
+  tick();
+  setInterval(tick, 3000);
+})();
+</script>
+</body>
+</html>
